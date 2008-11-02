@@ -23,6 +23,7 @@ public class Scanner implements Runnable {
         this.removed = removed;
     }
 
+    @Override
     public void run() {
         List<VirtualMachineDescriptor> currentDescriptors = VirtualMachine.list();
 
