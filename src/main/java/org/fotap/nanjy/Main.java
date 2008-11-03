@@ -3,6 +3,8 @@ package org.fotap.nanjy;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.fotap.nanjy.monitor.Sample;
+import org.fotap.nanjy.monitor.platform.PlatformMXBeans;
 import org.jetlang.channels.Channel;
 import org.jetlang.channels.MemoryChannel;
 import org.jetlang.core.Callback;
@@ -31,7 +33,9 @@ public class Main {
         Disposable scannerControl =
             core.scheduleWithFixedDelay( new Scanner( added, removed ), 0, 10, TimeUnit.SECONDS );
 
-        new Connector( added, removed, new MainClassOrJarFile(), new PlatformMXBeans() ).start();
+        Channel<Sample> samples = new MemoryChannel<Sample>();
+
+        new Connector( added, removed, new MainClassOrJarFile(), new PlatformMXBeans(), samples ).start();
 
         added.subscribe( core, new Callback<VirtualMachineDescriptor>() {
             @Override
@@ -44,6 +48,13 @@ public class Main {
             @Override
             public void onMessage( VirtualMachineDescriptor message ) {
                 logger.info( "removed: {}", message );
+            }
+        } );
+
+        samples.subscribe( core, new Callback<Sample>() {
+            @Override
+            public void onMessage( Sample sample ) {
+                System.out.println( sample );
             }
         } );
     }

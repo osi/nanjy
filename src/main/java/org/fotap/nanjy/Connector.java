@@ -4,6 +4,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.fotap.nanjy.monitor.MonitorFactoryRegistry;
+import org.fotap.nanjy.monitor.Sample;
+import org.jetlang.channels.Publisher;
 import org.jetlang.channels.Subscriber;
 import org.jetlang.core.Callback;
 import org.jetlang.core.RunnableExecutorImpl;
@@ -26,16 +29,20 @@ public class Connector {
     private final ThreadFiber fiber;
     private final VirtualMachineNamer namer;
     private final MonitorFactoryRegistry monitorFactoryRegistry;
+    private final Publisher<Sample> samples;
 
     public Connector( Subscriber<VirtualMachineDescriptor> added,
                       Subscriber<VirtualMachineDescriptor> removed,
-                      VirtualMachineNamer namer, MonitorFactoryRegistry monitorFactoryRegistry )
+                      VirtualMachineNamer namer,
+                      MonitorFactoryRegistry monitorFactoryRegistry,
+                      Publisher<Sample> samples )
     {
         this.added = added;
         this.removed = removed;
         this.namer = namer;
         this.monitorFactoryRegistry = monitorFactoryRegistry;
-        this.fiber = new ThreadFiber( new RunnableExecutorImpl(), getClass().getName(), false );
+        this.samples = samples;
+        this.fiber = new ThreadFiber( new RunnableExecutorImpl(), getClass().getSimpleName(), false );
     }
 
     public void start() {
@@ -49,7 +56,7 @@ public class Connector {
         public void onMessage( final VirtualMachineDescriptor descriptor ) {
             try {
                 final VirtualMachine machine =
-                    new VirtualMachine( descriptor, agentHolder, namer, monitorFactoryRegistry );
+                    new VirtualMachine( descriptor, agentHolder, namer, monitorFactoryRegistry, samples );
 
                 machine.start( new Runnable() {
                     @Override

@@ -16,8 +16,13 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
+import org.fotap.nanjy.monitor.Monitor;
+import org.fotap.nanjy.monitor.MonitorFactory;
+import org.fotap.nanjy.monitor.MonitorFactoryRegistry;
+import org.fotap.nanjy.monitor.Sample;
 import org.jetlang.channels.Channel;
 import org.jetlang.channels.MemoryChannel;
+import org.jetlang.channels.Publisher;
 import org.jetlang.core.Callback;
 import org.jetlang.core.RunnableExecutorImpl;
 import org.jetlang.fibers.Fiber;
@@ -42,13 +47,15 @@ public class VirtualMachine implements Disposable {
     private final Channel<ObjectName> removedMBeans;
     private final String name;
     private final MonitorFactoryRegistry monitorFactoryRegistry;
+    private final Publisher<Sample> samples;
 
     public VirtualMachine( VirtualMachineDescriptor descriptor,
                            AgentHolder agentHolder,
                            VirtualMachineNamer namer,
-                           MonitorFactoryRegistry monitorFactoryRegistry ) throws Exception
+                           MonitorFactoryRegistry monitorFactoryRegistry, Publisher<Sample> samples ) throws Exception
     {
         this.monitorFactoryRegistry = monitorFactoryRegistry;
+        this.samples = samples;
 
         logger.debug( "attaching to {}", descriptor );
 
@@ -91,24 +98,26 @@ public class VirtualMachine implements Disposable {
             public void onMessage( ObjectName message ) {
                 logger.debug( "added: {}", message );
 
-                // TODO what if below throws an exception? should handle in the queue more cleanly
-                MonitorFactory factory = monitorFactoryRegistry.factoryFor( message );
+                try {
+                    MonitorFactory factory = monitorFactoryRegistry.factoryFor( message );
 
-                if ( null == factory ) {
-                    logger.warn( "no monitor factory for {}", message );
-                } else {
-                    // TODO need to feed the monitor with something to DO
-                    final Monitor monitor = factory.create( message, connection );
-                    final org.jetlang.core.Disposable control =
-                        fiber.scheduleWithFixedDelay( monitor, 0, 10, TimeUnit.SECONDS );
+                    if ( null == factory ) {
+                        logger.warn( "no monitor factory for {}", message );
+                    } else {
+                        final Monitor monitor = factory.create( name, message, connection, samples );
+                        final org.jetlang.core.Disposable control =
+                            fiber.scheduleWithFixedDelay( monitor, 0, 10, TimeUnit.SECONDS );
 
-                    monitors.put( message, new Disposable() {
-                        @Override
-                        public void dispose() {
-                            control.dispose();
-                            monitor.dispose();
-                        }
-                    } );
+                        monitors.put( message, new Disposable() {
+                            @Override
+                            public void dispose() {
+                                control.dispose();
+                                monitor.dispose();
+                            }
+                        } );
+                    }
+                } catch( Exception e ) {
+                    logger.error( "Unable to create monitor for " + message + " in " + name, e );
                 }
             }
         } );
@@ -144,7 +153,7 @@ public class VirtualMachine implements Disposable {
                 try {
                     connection.removeNotificationListener( MBeanServerDelegate.DELEGATE_NAME, listener );
                 } catch( OperationsException e ) {
-                    logger.debug( "Unable to cleanly remove listener", e );
+                    logger.trace( "Unable to cleanly remove listener", e );
                 }
             }
 

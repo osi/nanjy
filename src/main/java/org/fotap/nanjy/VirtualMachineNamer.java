@@ -8,5 +8,5 @@ import com.sun.tools.attach.VirtualMachine;
  * @author <a href="mailto:peter.royal@pobox.com">peter royal</a>
  */
 public interface VirtualMachineNamer {
-    String name( VirtualMachine vm );
+    String name( VirtualMachine vm ) throws Exception;
 }
