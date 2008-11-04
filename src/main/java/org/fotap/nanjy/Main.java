@@ -29,10 +29,6 @@ public class Main {
 
         Channel<VirtualMachineDescriptor> added = new MemoryChannel<VirtualMachineDescriptor>();
         Channel<VirtualMachineDescriptor> removed = new MemoryChannel<VirtualMachineDescriptor>();
-
-        Disposable scannerControl =
-            core.scheduleWithFixedDelay( new Scanner( added, removed ), 0, 10, TimeUnit.SECONDS );
-
         Channel<Sample> samples = new MemoryChannel<Sample>();
 
         new Connector( added, removed, new MainClassOrJarFile(), new PlatformMXBeans(), samples ).start();
@@ -57,6 +53,9 @@ public class Main {
                 System.out.println( sample );
             }
         } );
+
+        Disposable scannerControl =
+            core.scheduleWithFixedDelay( new Scanner( added, removed ), 0, 10, TimeUnit.SECONDS );
     }
 
     public static void main( String... args ) {
