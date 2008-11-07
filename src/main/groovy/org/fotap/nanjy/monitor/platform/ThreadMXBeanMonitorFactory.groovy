@@ -4,7 +4,6 @@ import java.lang.management.ManagementFactory
 import java.lang.management.ThreadMXBean
 import javax.management.MBeanServerConnection
 import javax.management.ObjectName
-import org.fotap.nanjy.monitor.LongSample
 import org.fotap.nanjy.monitor.Monitor
 import org.fotap.nanjy.monitor.MonitorFactory
 import org.fotap.nanjy.monitor.Sample
@@ -21,10 +20,9 @@ public class ThreadMXBeanMonitorFactory implements MonitorFactory {
         return {
             run: {
                 def now = System.currentTimeMillis()
-                samples.publish new LongSample(name + "/platform/thread/count", bean.threadCount, now)
-                samples.publish new LongSample(name + "/platform/thread/daemon_count", bean.daemonThreadCount, now)
-                samples.publish new LongSample(name + "/platform/thread/peak_count", bean.peakThreadCount, now)
-                samples.publish new LongSample(name + "/platform/thread/total_started_count", bean.totalStartedThreadCount, now)
+                samples.publish new Sample(name + "/counter-threads_started", now, bean.totalStartedThreadCount)
+                samples.publish new Sample(
+                    name + "/jvm_threads", now, bean.threadCount, bean.daemonThreadCount, bean.peakThreadCount)
             }
 
             dispose: {}
