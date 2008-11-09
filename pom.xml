@@ -57,6 +57,43 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.codehaus.groovy.maven.runtime:gmaven-runtime-default</exclude>
+                                    <exclude>org.codehaus.groovy.maven.runtime:gmaven-runtime-1.5</exclude>
+                                    <exclude>org.codehaus.groovy.maven.runtime:gmaven-runtime-support</exclude>
+                                    <exclude>org.codehaus.groovy.maven.runtime:gmaven-runtime-api</exclude>
+                                    <exclude>org.codehaus.groovy.maven.feature:gmaven-feature-support</exclude>
+                                    <exclude>org.codehaus.groovy.maven.feature:gmaven-feature-api</exclude>
+                                    <exclude>org.codehaus.groovy.maven:gmaven-common</exclude>
+                                    <exclude>org.codehaus.plexus:plexus-utils</exclude>
+                                    <exclude>com.thoughtworks.qdox:qdox</exclude>
+                                    <exclude>org.apache.ant:ant</exclude>
+                                    <exclude>org.apache.ant:ant-launcher</exclude>
+                                    <exclude>jline:jline</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.fotap.nanjy.Main</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
