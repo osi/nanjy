@@ -49,13 +49,6 @@ public class Main {
             }
         } );
 
-//        samples.subscribe( core, new Callback<Sample>() {
-//            @Override
-//            public void onMessage( Sample sample ) {
-//                System.out.println( sample );
-//            }
-//        } );
-
         final String hostname = hostname();
 
         samples.subscribe( core, new Callback<Sample>() {
