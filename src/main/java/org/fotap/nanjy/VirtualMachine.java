@@ -17,8 +17,8 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
 import org.fotap.nanjy.monitor.Monitor;
+import org.fotap.nanjy.monitor.MonitorFactories;
 import org.fotap.nanjy.monitor.MonitorFactory;
-import org.fotap.nanjy.monitor.MonitorFactoryRegistry;
 import org.fotap.nanjy.monitor.Sample;
 import org.jetlang.channels.Channel;
 import org.jetlang.channels.MemoryChannel;
@@ -46,15 +46,15 @@ public class VirtualMachine implements Disposable {
     private final Channel<ObjectName> addedMBeans;
     private final Channel<ObjectName> removedMBeans;
     private final String name;
-    private final MonitorFactoryRegistry monitorFactoryRegistry;
+    private final MonitorFactories monitorFactories;
     private final Publisher<Sample> samples;
 
     public VirtualMachine( VirtualMachineDescriptor descriptor,
                            AgentHolder agentHolder,
                            VirtualMachineNamer namer,
-                           MonitorFactoryRegistry monitorFactoryRegistry, Publisher<Sample> samples ) throws Exception
+                           MonitorFactories monitorFactories, Publisher<Sample> samples ) throws Exception
     {
-        this.monitorFactoryRegistry = monitorFactoryRegistry;
+        this.monitorFactories = monitorFactories;
         this.samples = samples;
 
         logger.debug( "attaching to {}", descriptor );
@@ -99,7 +99,7 @@ public class VirtualMachine implements Disposable {
                 logger.debug( "added: {}", message );
 
                 try {
-                    MonitorFactory factory = monitorFactoryRegistry.factoryFor( message );
+                    MonitorFactory factory = monitorFactories.factoryFor( message );
 
                     if ( null == factory ) {
                         logger.warn( "no monitor factory for {}", message );
