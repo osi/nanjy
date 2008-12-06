@@ -1,12 +1,14 @@
 package org.fotap.nanjy;
 
+import java.io.File;
 import java.net.InetAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.fotap.nanjy.monitor.GroovyScriptMonitorFactories;
 import org.fotap.nanjy.monitor.Sample;
-import org.fotap.nanjy.monitor.platform.PlatformMXBeans;
 import org.jetlang.channels.Channel;
 import org.jetlang.channels.MemoryChannel;
 import org.jetlang.core.Callback;
@@ -22,7 +24,7 @@ import com.sun.tools.attach.VirtualMachineDescriptor;
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger( Main.class );
 
-    public Main() {
+    public Main( URL monitorSource ) {
         PoolFiberFactory fiberFactory = new PoolFiberFactory( Executors.newFixedThreadPool( 1 ) );
 
         Fiber core = fiberFactory.create();
@@ -33,7 +35,11 @@ public class Main {
         Channel<VirtualMachineDescriptor> removed = new MemoryChannel<VirtualMachineDescriptor>();
         Channel<Sample> samples = new MemoryChannel<Sample>();
 
-        new Connector( added, removed, new MainClassOrJarFile(), new PlatformMXBeans(), samples ).start();
+        new Connector( added,
+                       removed,
+                       new MainClassOrJarFile(),
+                       new GroovyScriptMonitorFactories( monitorSource ),
+                       samples ).start();
 
         added.subscribe( core, new Callback<VirtualMachineDescriptor>() {
             @Override
@@ -86,7 +92,7 @@ public class Main {
         }
     }
 
-    public static void main( String... args ) {
-        new Main();
+    public static void main( String... args ) throws Exception {
+        new Main( new File( args[0] ).toURI().toURL() );
     }
 }
