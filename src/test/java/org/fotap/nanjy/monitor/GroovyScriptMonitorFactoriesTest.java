@@ -1,6 +1,7 @@
 package org.fotap.nanjy.monitor;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import javax.management.ObjectName;
 
 import static org.junit.Assert.*;
@@ -36,4 +37,10 @@ public class GroovyScriptMonitorFactoriesTest {
     public void returnsNullWhenThereIsNoFactory() throws Exception {
         assertNull( monitorFactories.factoryFor( ObjectName.getInstance( "com.example.none", "type", "Foo" ) ) );
     }
+
+    @Test
+    public void platformMXBeansFactory() throws Exception {
+        assertNotNull( monitorFactories.factoryFor( ObjectName.getInstance( ManagementFactory.MEMORY_MXBEAN_NAME ) ) );
+    }
+
 }
