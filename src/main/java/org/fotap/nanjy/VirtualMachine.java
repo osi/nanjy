@@ -97,8 +97,6 @@ public class VirtualMachine implements Disposable {
         addedMBeans.subscribe( fiber, new Callback<ObjectName>() {
             @Override
             public void onMessage( ObjectName message ) {
-                logger.debug( "added: {}", message );
-
                 try {
                     MonitorFactory factory = monitorFactories.factoryFor( message );
 
@@ -109,6 +107,8 @@ public class VirtualMachine implements Disposable {
                         final Monitor monitor = factory.create( name, message, connection, samples );
                         final org.jetlang.core.Disposable control =
                             fiber.scheduleWithFixedDelay( monitor, 0, 10, TimeUnit.SECONDS );
+
+                        logger.debug( "added {} / {}", message, name );
 
                         monitors.put( message, new Disposable() {
                             @Override
