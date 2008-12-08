@@ -18,7 +18,7 @@ public class ClassLoadingMXBeanMonitorFactory implements MonitorFactory {
         ClassLoadingMXBean bean = ManagementFactory.newPlatformMXBeanProxy(connection, mbean.getCanonicalName(), ClassLoadingMXBean.class)
         return {
             run: {
-                samples.publish new Sample("jvm/${name}/class-loading",
+                samples.publish new Sample("${name}/jvm/class_loading",
                                            System.currentTimeMillis(),
                                            bean.loadedClassCount,
                                            bean.unloadedClassCount,

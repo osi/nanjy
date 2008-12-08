@@ -9,13 +9,13 @@ import org.fotap.nanjy.monitor.MonitorFactory
 import org.fotap.nanjy.monitor.Sample
 import org.jetlang.channels.Publisher
 
-/** @author <a href="mailto:peter.royal@pobox.com">peter royal</a>            */
+/** @author <a href="mailto:peter.royal@pobox.com">peter royal</a>             */
 public class GarbageCollectorMXBeanMonitorFactory implements MonitorFactory {
 
     public Monitor create(String name, ObjectName mbean, MBeanServerConnection connection, Publisher<Sample> samples)
     {
         GarbageCollectorMXBean bean = ManagementFactory.newPlatformMXBeanProxy(connection, mbean.getCanonicalName(), GarbageCollectorMXBean.class)
-        def prefix = "jvm/${name}/gc/${bean.name}"
+        def prefix = "${name}/jvm/gc/${bean.name}"
 
         return {
             run: {
