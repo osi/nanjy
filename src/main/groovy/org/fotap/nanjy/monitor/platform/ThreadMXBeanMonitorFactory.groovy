@@ -9,6 +9,7 @@ import org.fotap.nanjy.monitor.MonitorFactory
 import org.fotap.nanjy.monitor.Sample
 import org.jetlang.channels.Publisher
 
+
 /**
  * @author <a href="mailto:peter.royal@pobox.com">peter royal</a>
  */
@@ -19,9 +20,8 @@ public class ThreadMXBeanMonitorFactory implements MonitorFactory {
         return {
             run: {
                 def now = System.currentTimeMillis()
-                samples.publish new Sample(name + "/threads/started", now, bean.totalStartedThreadCount)
-                samples.publish new Sample(
-                    name + "/threads/counts", now, bean.threadCount, bean.daemonThreadCount, bean.peakThreadCount)
+                samples.publish new Sample("${name}/threads/started", now, bean.totalStartedThreadCount)
+                samples.publish new Sample("${name}/threads/counts", now, bean.threadCount, bean.daemonThreadCount, bean.peakThreadCount)
             }
 
             dispose: {}

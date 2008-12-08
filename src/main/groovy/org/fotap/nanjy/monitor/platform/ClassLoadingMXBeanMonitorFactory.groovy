@@ -9,7 +9,6 @@ import org.fotap.nanjy.monitor.MonitorFactory
 import org.fotap.nanjy.monitor.Sample
 import org.jetlang.channels.Publisher
 
-
 /**
  * @author <a href="mailto:peter.royal@pobox.com">peter royal</a>
  */
@@ -19,7 +18,7 @@ public class ClassLoadingMXBeanMonitorFactory implements MonitorFactory {
         ClassLoadingMXBean bean = ManagementFactory.newPlatformMXBeanProxy(connection, mbean.getCanonicalName(), ClassLoadingMXBean.class)
         return {
             run: {
-                samples.publish new Sample(name + "/class-loading",
+                samples.publish new Sample("${name}/class-loading",
                                            System.currentTimeMillis(),
                                            bean.loadedClassCount,
                                            bean.unloadedClassCount,
