@@ -4,13 +4,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.fotap.nanjy.monitor.MonitorFactories;
-import org.fotap.nanjy.monitor.Sample;
-import org.jetlang.channels.Publisher;
 import org.jetlang.channels.Subscriber;
 import org.jetlang.core.Callback;
-import org.jetlang.core.RunnableExecutorImpl;
-import org.jetlang.fibers.ThreadFiber;
+import org.jetlang.fibers.Fiber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,45 +16,37 @@ import com.sun.tools.attach.VirtualMachineDescriptor;
 public class Connector {
     private static final Logger logger = LoggerFactory.getLogger( Connector.class );
 
-    private final AgentHolder agentHolder = new AgentHolder();
     private final Map<VirtualMachineDescriptor, VirtualMachine> vms =
         Collections.synchronizedMap( new HashMap<VirtualMachineDescriptor, VirtualMachine>() );
 
     private final Subscriber<VirtualMachineDescriptor> added;
     private final Subscriber<VirtualMachineDescriptor> removed;
-    private final ThreadFiber fiber;
-    private final VirtualMachineNamer namer;
-    private final MonitorFactories monitorFactories;
-    private final Publisher<Sample> samples;
+    private final Fiber fiber;
+    private final VirtualMachineFactory virtualMachineFactory;
 
     public Connector( Subscriber<VirtualMachineDescriptor> added,
                       Subscriber<VirtualMachineDescriptor> removed,
-                      VirtualMachineNamer namer,
-                      MonitorFactories monitorFactories,
-                      Publisher<Sample> samples )
+                      Fiber fiber,
+                      VirtualMachineFactory virtualMachineFactory )
     {
         this.added = added;
         this.removed = removed;
-        this.namer = namer;
-        this.monitorFactories = monitorFactories;
-        this.samples = samples;
-        this.fiber = new ThreadFiber( new RunnableExecutorImpl(), getClass().getSimpleName(), false );
+        this.fiber = fiber;
+        this.virtualMachineFactory = virtualMachineFactory;
     }
 
     public void start() {
         added.subscribe( fiber, new Added() );
         removed.subscribe( fiber, new Removed() );
-        fiber.start();
     }
 
     private class Added implements Callback<VirtualMachineDescriptor> {
         @Override
         public void onMessage( final VirtualMachineDescriptor descriptor ) {
             try {
-                final VirtualMachine machine =
-                    new VirtualMachine( descriptor, agentHolder, namer, monitorFactories, samples );
+                final VirtualMachine machine = virtualMachineFactory.create( descriptor );
 
-                machine.start( new Runnable() {
+                machine.start( fiber, new Runnable() {
                     @Override
                     public void run() {
                         vms.put( descriptor, machine );
