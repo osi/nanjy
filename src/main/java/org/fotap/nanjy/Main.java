@@ -4,21 +4,13 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.fotap.nanjy.monitor.GroovyScriptMonitorFactories;
 import org.fotap.nanjy.monitor.Sample;
 import org.jetlang.channels.Channel;
 import org.jetlang.channels.MemoryChannel;
 import org.jetlang.core.Callback;
-import org.jetlang.core.Disposable;
-import org.jetlang.core.RunnableExecutorImpl;
-import org.jetlang.fibers.Fiber;
-import org.jetlang.fibers.PoolFiberFactory;
-import org.jetlang.fibers.ThreadFiber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,42 +21,30 @@ public class Main {
     private static final Logger logger = LoggerFactory.getLogger( Main.class );
 
     public Main( URL monitorSource ) {
-        Fiber core = new ThreadFiber( new RunnableExecutorImpl(), "core", false );
-
-        core.start();
+        Fibers fibers = new Fibers();
 
         Channel<VirtualMachineDescriptor> added = new MemoryChannel<VirtualMachineDescriptor>();
         Channel<VirtualMachineDescriptor> removed = new MemoryChannel<VirtualMachineDescriptor>();
         Channel<Sample> samples = new MemoryChannel<Sample>();
-        Fiber sampling = new PoolFiberFactory( Executors.newFixedThreadPool( 1, new ThreadFactory() {
-            final AtomicInteger counter = new AtomicInteger( 0 );
-
-            @Override
-            public Thread newThread( Runnable r ) {
-                return new Thread( r, "sampler-" + counter.getAndIncrement() );
-            }
-        } ) ).create();
-
-        sampling.start();
 
         new Connector( added,
                        removed,
-                       core,
+                       fibers.core(),
                        new VirtualMachineFactory( new AgentHolder(),
                                                   new MainClassOrJarFile(),
                                                   new GroovyScriptMonitorFactories( monitorSource ),
                                                   samples,
-                                                  sampling )
+                                                  fibers.sampler() )
         ).start();
 
-        added.subscribe( core, new Callback<VirtualMachineDescriptor>() {
+        added.subscribe( fibers.core(), new Callback<VirtualMachineDescriptor>() {
             @Override
             public void onMessage( VirtualMachineDescriptor message ) {
                 logger.info( "added: {}", message );
             }
         } );
 
-        removed.subscribe( core, new Callback<VirtualMachineDescriptor>() {
+        removed.subscribe( fibers.core(), new Callback<VirtualMachineDescriptor>() {
             @Override
             public void onMessage( VirtualMachineDescriptor message ) {
                 logger.info( "removed: {}", message );
@@ -74,7 +54,7 @@ public class Main {
         final String hostname = hostname();
 
         // TODO ouput on a separate thread
-        samples.subscribe( core, new Callback<Sample>() {
+        samples.subscribe( fibers.core(), new Callback<Sample>() {
             @Override
             public void onMessage( Sample sample ) {
                 StringBuilder sb = new StringBuilder( 256 );
@@ -93,8 +73,7 @@ public class Main {
             }
         } );
 
-        Disposable scannerControl =
-            core.scheduleWithFixedDelay( new Scanner( added, removed ), 0, 10, TimeUnit.SECONDS );
+        fibers.core().scheduleWithFixedDelay( new Scanner( added, removed ), 0, 10, TimeUnit.SECONDS );
     }
 
     private static String hostname() {
