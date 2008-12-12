@@ -13,6 +13,7 @@ import org.jetlang.fibers.ThreadFiber;
 class Fibers {
     private final ThreadFiber core;
     private final Fiber sampler;
+    private final ThreadFiber emitter;
 
     Fibers() {
         final PoolFiberFactory samplers = new PoolFiberFactory( Executors.newFixedThreadPool( 1, new ThreadFactory() {
@@ -25,6 +26,7 @@ class Fibers {
         } ) );
 
         core = new ThreadFiber( new RunnableExecutorImpl(), "core", false );
+        emitter = new ThreadFiber( new RunnableExecutorImpl(), "emitter", false );
 
         Runtime.getRuntime().addShutdownHook( new Thread() {
             @Override
@@ -33,12 +35,17 @@ class Fibers {
 
                 core.dispose();
                 core.join();
+
+                emitter.dispose();
+                emitter.join();
             }
         } );
 
         sampler = samplers.create();
         sampler.start();
+
         core.start();
+        emitter.start();
     }
 
     Fiber core() {
@@ -47,5 +54,9 @@ class Fibers {
 
     Fiber sampler() {
         return sampler;
+    }
+
+    Fiber emitter() {
+        return emitter;
     }
 }
