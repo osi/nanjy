@@ -10,13 +10,13 @@ import org.fotap.nanjy.monitor.MonitorFactory
 import org.fotap.nanjy.monitor.Sample
 import org.jetlang.channels.Publisher
 
-/** @author <a href="mailto:peter.royal@pobox.com">peter royal</a>          */
+/** @author <a href="mailto:peter.royal@pobox.com">peter royal</a>           */
 public class MemoryPoolMXBeanMonitorFactory implements MonitorFactory {
 
     public Monitor create(String name, ObjectName mbean, MBeanServerConnection connection, Publisher<Sample> samples)
     {
         MemoryPoolMXBean bean = ManagementFactory.newPlatformMXBeanProxy(connection, mbean.getCanonicalName(), MemoryPoolMXBean.class)
-        def prefix = "${name}/memory-pool/${bean.name}/"
+        def prefix = "jvm/${name}/memory-pool/${bean.name}/"
 
         return {
             run: {
