@@ -15,22 +15,25 @@ public class GroovyScriptMonitorFactories implements MonitorFactories {
     private final GroovyClassLoader loader;
 
     public GroovyScriptMonitorFactories( URL source ) {
+        logger.debug( "Will load scripts from {}", source );
+
         loader = new GroovyClassLoader();
         loader.addURL( source );
     }
 
     @Override
     public MonitorFactory factoryFor( ObjectName mbean ) {
-        return factoryForPackage( mbean.getDomain() );
+        MonitorFactories factories = factoryForPackage( mbean.getDomain() );
+        return null == factories ? null : factories.factoryFor( mbean );
     }
 
-    private MonitorFactory factoryForPackage( String pkg ) {
+    private MonitorFactories factoryForPackage( String pkg ) {
         Class<?> clazz;
 
         try {
-            clazz = loader.loadClass( pkg + ".MonitorFactory", true, false );
+            clazz = loader.loadClass( pkg + ".MonitorFactories", true, false );
         } catch( ClassNotFoundException e ) {
-            logger.debug( "No monitor for package: " + pkg, e );
+            logger.trace( "No monitor for package: " + pkg, e );
 
             int i = pkg.lastIndexOf( '.' );
 
@@ -41,9 +44,9 @@ public class GroovyScriptMonitorFactories implements MonitorFactories {
             return null;
         }
 
-        if ( MonitorFactory.class.isAssignableFrom( clazz ) ) {
+        if ( MonitorFactories.class.isAssignableFrom( clazz ) ) {
             try {
-                return clazz.asSubclass( MonitorFactory.class ).newInstance();
+                return clazz.asSubclass( MonitorFactories.class ).newInstance();
             } catch( Exception e ) {
                 logger.error( "Unable to create new instance of " + clazz.getName(), e );
 
@@ -51,7 +54,9 @@ public class GroovyScriptMonitorFactories implements MonitorFactories {
             }
         }
 
-        logger.warn( "Found MonitorFactory {}, but it isn't a {}", clazz.getName(), MonitorFactory.class.getName() );
+        logger.warn( "Found MonitorFactories {}, but it isn't a {}",
+                     clazz.getName(),
+                     MonitorFactories.class.getName() );
 
         return null;
     }
