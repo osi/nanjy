@@ -3,3 +3,4 @@
 *.iws
 atlassian-ide-plugin.private.xml
 target
+.DS_Store
