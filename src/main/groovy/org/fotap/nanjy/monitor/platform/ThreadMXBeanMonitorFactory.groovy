@@ -19,9 +19,9 @@ public class ThreadMXBeanMonitorFactory implements MonitorFactory {
         return {
             run: {
                 def now = System.currentTimeMillis()
-                samples.publish new Sample(name + "/counter-threads_started", now, bean.totalStartedThreadCount)
+                samples.publish new Sample(name + "/threads/started", now, bean.totalStartedThreadCount)
                 samples.publish new Sample(
-                    name + "/threads", now, bean.threadCount, bean.daemonThreadCount, bean.peakThreadCount)
+                    name + "/threads/count", now, bean.threadCount, bean.daemonThreadCount, bean.peakThreadCount)
             }
 
             dispose: {}
