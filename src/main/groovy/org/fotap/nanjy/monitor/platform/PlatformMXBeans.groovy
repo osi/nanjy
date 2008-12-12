@@ -5,7 +5,7 @@ import javax.management.ObjectName
 import org.fotap.nanjy.monitor.MonitorFactories
 import org.fotap.nanjy.monitor.MonitorFactory
 
-/** @author <a href="mailto:peter.royal@pobox.com">peter royal</a>          */
+/** @author <a href="mailto:peter.royal@pobox.com">peter royal</a>           */
 public class PlatformMXBeans implements MonitorFactories {
 
     public MonitorFactory factoryFor(ObjectName mbean) {
@@ -18,6 +18,8 @@ public class PlatformMXBeans implements MonitorFactories {
                 return new ClassLoadingMXBeanMonitorFactory();
             case { it.startsWith(ManagementFactory.MEMORY_POOL_MXBEAN_DOMAIN_TYPE) }:
                 return new MemoryPoolMXBeanMonitorFactory();
+            case { it.startsWith(ManagementFactory.GARBAGE_COLLECTOR_MXBEAN_DOMAIN_TYPE) }:
+                return new GarbageCollectorMXBeanMonitorFactory();
         }
 
         return null;
