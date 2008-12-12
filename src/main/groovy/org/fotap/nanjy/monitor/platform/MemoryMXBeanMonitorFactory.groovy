@@ -10,7 +10,7 @@ import org.fotap.nanjy.monitor.MonitorFactory
 import org.fotap.nanjy.monitor.Sample
 import org.jetlang.channels.Publisher
 
-/** @author <a href="mailto:peter.royal@pobox.com">peter royal</a>       */
+/** @author <a href="mailto:peter.royal@pobox.com">peter royal</a>        */
 public class MemoryMXBeanMonitorFactory implements MonitorFactory {
 
     public Monitor create(String name, ObjectName mbean, MBeanServerConnection connection, Publisher<Sample> samples)
@@ -28,7 +28,7 @@ public class MemoryMXBeanMonitorFactory implements MonitorFactory {
                     MemoryUsage usage = it.value
 
                     samples.publish new Sample(
-                        name + "/jvm_memory-" + type + "", now, usage.init, usage.used, usage.committed, usage.max);
+                        name + "/memory/" + type + "", now, usage.init, usage.used, usage.committed, usage.max);
                 }
             }
 

@@ -72,13 +72,13 @@ public class VirtualMachine implements Disposable {
 
         JMXServiceURL url = new JMXServiceURL( address );
 
-        logger.debug( "conencting to {} via {}", descriptor, address );
+        logger.trace( "conencting to {} via {}", descriptor, address );
 
         connector = JMXConnectorFactory.connect( url );
         connection = connector.getMBeanServerConnection();
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "remote properties:\nagent: {}\nsystem {}",
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "remote properties:\nagent: {}\nsystem {}",
                           vm.getAgentProperties(),
                           vm.getSystemProperties() );
         }
