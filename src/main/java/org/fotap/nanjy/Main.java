@@ -8,9 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.fotap.nanjy.monitor.GroovyScriptMonitorFactories;
 import org.fotap.nanjy.monitor.Sample;
-import org.jetlang.channels.Channel;
-import org.jetlang.channels.MemoryChannel;
 import org.jetlang.core.Callback;
+import org.jetlang.fibers.Fiber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,29 +21,28 @@ public class Main {
 
     public Main( URL monitorSource ) {
         Fibers fibers = new Fibers();
+        Channels channels = new Channels();
 
-        Channel<VirtualMachineDescriptor> added = new MemoryChannel<VirtualMachineDescriptor>();
-        Channel<VirtualMachineDescriptor> removed = new MemoryChannel<VirtualMachineDescriptor>();
-        Channel<Sample> samples = new MemoryChannel<Sample>();
+        Fiber core = fibers.core();
 
-        new Connector( added,
-                       removed,
-                       fibers.core(),
+        new Connector( channels.added(),
+                       channels.removed(),
+                       core,
                        new VirtualMachineFactory( new AgentHolder(),
                                                   new MainClassOrJarFile(),
                                                   new GroovyScriptMonitorFactories( monitorSource ),
-                                                  samples,
+                                                  channels.samples(),
                                                   fibers.sampler() )
         ).start();
 
-        added.subscribe( fibers.core(), new Callback<VirtualMachineDescriptor>() {
+        channels.added().subscribe( core, new Callback<VirtualMachineDescriptor>() {
             @Override
             public void onMessage( VirtualMachineDescriptor message ) {
                 logger.info( "added: {}", message );
             }
         } );
 
-        removed.subscribe( fibers.core(), new Callback<VirtualMachineDescriptor>() {
+        channels.removed().subscribe( core, new Callback<VirtualMachineDescriptor>() {
             @Override
             public void onMessage( VirtualMachineDescriptor message ) {
                 logger.info( "removed: {}", message );
@@ -54,7 +52,7 @@ public class Main {
         final String hostname = hostname();
 
         // TODO ouput on a separate thread
-        samples.subscribe( fibers.core(), new Callback<Sample>() {
+        channels.samples().subscribe( core, new Callback<Sample>() {
             @Override
             public void onMessage( Sample sample ) {
                 StringBuilder sb = new StringBuilder( 256 );
@@ -73,7 +71,7 @@ public class Main {
             }
         } );
 
-        fibers.core().scheduleWithFixedDelay( new Scanner( added, removed ), 0, 10, TimeUnit.SECONDS );
+        core.scheduleWithFixedDelay( new Scanner( channels.added(), channels.removed() ), 0, 10, TimeUnit.SECONDS );
     }
 
     private static String hostname() {
