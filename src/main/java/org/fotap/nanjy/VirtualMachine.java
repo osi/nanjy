@@ -24,9 +24,7 @@ import org.jetlang.channels.Channel;
 import org.jetlang.channels.MemoryChannel;
 import org.jetlang.channels.Publisher;
 import org.jetlang.core.Callback;
-import org.jetlang.core.RunnableExecutorImpl;
 import org.jetlang.fibers.Fiber;
-import org.jetlang.fibers.ThreadFiber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +37,6 @@ public class VirtualMachine implements Disposable {
     private final AddAndRemoveNotificationListener listener = new AddAndRemoveNotificationListener();
     private final Map<ObjectName, Disposable> monitors =
         Collections.synchronizedMap( new HashMap<ObjectName, Disposable>() );
-    private final Fiber fiber;
     private final com.sun.tools.attach.VirtualMachine vm;
     private final JMXConnector connector;
     private final MBeanServerConnection connection;
@@ -48,14 +45,18 @@ public class VirtualMachine implements Disposable {
     private final String name;
     private final MonitorFactories monitorFactories;
     private final Publisher<Sample> samples;
+    private final Fiber sampleFiber;
 
     public VirtualMachine( VirtualMachineDescriptor descriptor,
                            AgentHolder agentHolder,
                            VirtualMachineNamer namer,
-                           MonitorFactories monitorFactories, Publisher<Sample> samples ) throws Exception
+                           MonitorFactories monitorFactories,
+                           Publisher<Sample> samples,
+                           Fiber sampleFiber ) throws Exception
     {
         this.monitorFactories = monitorFactories;
         this.samples = samples;
+        this.sampleFiber = sampleFiber;
 
         logger.debug( "attaching to {}", descriptor );
 
@@ -86,14 +87,11 @@ public class VirtualMachine implements Disposable {
         // TODO name thread based on the VM name
         // TODO use java.lang.management.RuntimeMXBean
         name = namer.name( vm );
-        fiber = new ThreadFiber( new RunnableExecutorImpl(), null, false );
         addedMBeans = new MemoryChannel<ObjectName>();
         removedMBeans = new MemoryChannel<ObjectName>();
     }
 
-    public void start( final Runnable callback ) {
-        fiber.start();
-
+    public void start( Fiber fiber, final Runnable callback ) {
         addedMBeans.subscribe( fiber, new Callback<ObjectName>() {
             @Override
             public void onMessage( ObjectName message ) {
@@ -106,7 +104,7 @@ public class VirtualMachine implements Disposable {
                     } else {
                         final Monitor monitor = factory.create( name, message, connection, samples );
                         final org.jetlang.core.Disposable control =
-                            fiber.scheduleWithFixedDelay( monitor, 0, 10, TimeUnit.SECONDS );
+                            sampleFiber.scheduleWithFixedDelay( monitor, 0, 10, TimeUnit.SECONDS );
 
                         logger.debug( "added {} / {}", message, name );
 
