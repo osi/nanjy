@@ -25,6 +25,8 @@
     </scm>
 
     <build>
+        <defaultGoal>install</defaultGoal>
+
         <extensions>
             <extension>
                 <groupId>org.jvnet.wagon-svn</groupId>
@@ -107,13 +109,13 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.5.3</version>
+            <version>1.5.6</version>
         </dependency>
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>0.9.9</version>
+            <version>0.9.13</version>
         </dependency>
 
         <dependency>
