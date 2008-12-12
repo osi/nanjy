@@ -84,6 +84,7 @@ public class VirtualMachine implements Disposable {
         }
 
         // TODO name thread based on the VM name
+        // TODO use java.lang.management.RuntimeMXBean
         name = namer.name( vm );
         fiber = new ThreadFiber( new RunnableExecutorImpl(), null, false );
         addedMBeans = new MemoryChannel<ObjectName>();
@@ -102,7 +103,8 @@ public class VirtualMachine implements Disposable {
                     MonitorFactory factory = monitorFactories.factoryFor( message );
 
                     if ( null == factory ) {
-                        logger.warn( "no monitor factory for {}", message );
+                        // TODO what's the proper log level here? we may care, may not.
+                        logger.debug( "no monitor factory for {}", message );
                     } else {
                         final Monitor monitor = factory.create( name, message, connection, samples );
                         final org.jetlang.core.Disposable control =
