@@ -6,6 +6,8 @@ import com.sun.tools.attach.VirtualMachine;
 public class MainClassOrJarFile implements VirtualMachineNamer {
     @Override
     public String name( VirtualMachine vm ) throws Exception {
-        return vm.getAgentProperties().getProperty( "sun.java.command" );
+        String command = vm.getAgentProperties().getProperty( "sun.java.command" );
+        int space = command.indexOf( ' ' );
+        return space > 0 ? command.substring( 0, space ) : command;
     }
 }
