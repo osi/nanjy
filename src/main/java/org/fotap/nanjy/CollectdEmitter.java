@@ -8,6 +8,7 @@ import org.fotap.nanjy.monitor.Sample;
 import org.jetlang.core.Callback;
 
 /** @author <a href="mailto:peter.royal@pobox.com">peter royal</a> */
+@SuppressWarnings( { "UseOfSystemOutOrSystemErr" } )
 class CollectdEmitter implements Callback<Sample> {
     private final String hostname;
 
@@ -33,7 +34,7 @@ class CollectdEmitter implements Callback<Sample> {
         sb.append( "PUTVAL " )
             .append( hostname )
             .append( "/jvm-" )
-            .append( sample.getName() )
+            .append( sample.getDescriptor().getName() )
             .append( " " )
             .append( TimeUnit.MILLISECONDS.toSeconds( sample.takenAt() ) );
 

@@ -4,18 +4,18 @@ import java.util.Arrays;
 
 /** @author <a href="mailto:peter.royal@pobox.com">peter royal</a> */
 public class Sample {
-    private final String name;
+    private final Descriptor descriptor;
     private final long takenAt;
     private final Number[] values;
 
-    public Sample( String name, long takenAt, Number... values ) {
-        this.name = name;
+    public Sample( Descriptor descriptor, long takenAt, Number... values ) {
         this.takenAt = takenAt;
+        this.descriptor = descriptor;
         this.values = values;
     }
 
-    public String getName() {
-        return name;
+    public Descriptor getDescriptor() {
+        return descriptor;
     }
 
     public long takenAt() {
@@ -28,6 +28,6 @@ public class Sample {
 
     @Override
     public String toString() {
-        return name + " := " + Arrays.toString( values ) + " @ " + takenAt;
+        return descriptor.getName() + " := " + Arrays.toString( values ) + " @ " + takenAt;
     }
 }
